@@ -50,6 +50,28 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       return;
     }
+
+    // Part 3: Check for duplicates (case-insensitive & trimmed)
+    final existingIndex = items.indexWhere(
+      (item) => item.name.trim().toLowerCase() == text.toLowerCase(),
+    );
+
+    if (existingIndex != -1) {
+      setState(() {
+        items[existingIndex].quantity += 1;
+      });
+      controller.clear();
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${items[existingIndex].name} is already on the list: now ×${items[existingIndex].quantity}',
+          ),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       items.add(Item(text));
     });

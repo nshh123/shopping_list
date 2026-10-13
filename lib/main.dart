@@ -4,16 +4,13 @@ void main() {
   runApp(const ShoppingApp());
 }
 
-// 1. Model: holds name, details, and bought status
 class Item {
-  Item(this.name, {this.details = ''});
+  Item(this.name);
 
   String name;
-  String details;
   bool bought = false;
 }
 
-// 2. Main App Widget
 class ShoppingApp extends StatelessWidget {
   const ShoppingApp({super.key});
 
@@ -27,7 +24,6 @@ class ShoppingApp extends StatelessWidget {
   }
 }
 
-// 3. Screen Widget
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.title});
 
@@ -37,101 +33,27 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-// 4. Screen State and Logic
 class _HomeScreenState extends State<HomeScreen> {
-  final items = [
-    Item('Milk', details: 'almond milk, 4 litres'),
-    Item('Bread', details: 'Whole wheat'),
-    Item('Rice', details: 'Basmati 1kg'),
-    Item('test', details: 'test-detail'),
-    Item('cake', details: 'cupcake'),
-  ];
-
-  final nameController = TextEditingController();
-  final detailsController = TextEditingController();
+  final items = [Item('Milk'), Item('Bread'), Item('Rice')];
+  final controller = TextEditingController();
 
   void addItem() {
-    final name = nameController.text.trim();
-    final details = detailsController.text.trim();
-
-    if (name.isEmpty) {
+    final text = controller.text.trim();
+    if (text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Type an item name first')),
+        const SnackBar(content: Text('Type an item first')),
       );
       return;
     }
-
     setState(() {
-      items.add(Item(name, details: details));
+      items.add(Item(text));
     });
-
-    nameController.clear();
-    detailsController.clear();
-  }
-
-  // Opens a pop-up to edit both name and details
-  void editItem(int index) {
-    final editNameCtrl = TextEditingController(text: items[index].name);
-    final editDetailsCtrl = TextEditingController(text: items[index].details);
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit item'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: editNameCtrl,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Item name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: editDetailsCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Details / notes (optional)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                _saveEdit(index, editNameCtrl.text, editDetailsCtrl.text);
-                Navigator.pop(context);
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _saveEdit(int index, String newName, String newDetails) {
-    final name = newName.trim();
-    if (name.isNotEmpty) {
-      setState(() {
-        items[index].name = name;
-        items[index].details = newDetails.trim();
-      });
-    }
+    controller.clear();
   }
 
   @override
   void dispose() {
-    nameController.dispose();
-    detailsController.dispose();
+    controller.dispose();
     super.dispose();
   }
 
@@ -156,101 +78,68 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          // Input Section: Name + Details
           Padding(
             padding: const EdgeInsets.all(12),
-            child: Column(
+            child: Row(
               children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    hintText: 'Item name (e.g. Eggs)',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(
+                      hintText: 'Add an item',
+                      border: OutlineInputBorder(),
+                    ),
+                    onSubmitted: (_) => addItem(),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: detailsController,
-                        decoration: const InputDecoration(
-                          hintText: 'Details / notes (e.g. 1 crate, brown)',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                        onSubmitted: (_) => addItem(),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton.icon(
-                      onPressed: addItem,
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add'),
-                    ),
-                  ],
+                const SizedBox(width: 12),
+                FilledButton(
+                  onPressed: addItem,
+                  child: const Text('Add'),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
-          // List displaying Name and Subtitle Details
           Expanded(
-            child: ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return ListTile(
-                  leading: Icon(
-                    item.bought ? Icons.check_circle : Icons.shopping_basket,
-                    color: item.bought ? Colors.green : null,
-                  ),
-                  title: Text(
-                    item.name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      decoration:
-                          item.bought ? TextDecoration.lineThrough : null,
+            child: items.isEmpty
+                ? const Center(
+                    child: Text(
+                      'Your list is empty',
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
                     ),
-                  ),
-                  subtitle: item.details.isNotEmpty
-                      ? Text(
-                          item.details,
+                  )
+                : ListView.builder(
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      return ListTile(
+                        leading: Icon(
+                          item.bought ? Icons.check_circle : Icons.shopping_basket,
+                          color: item.bought ? Colors.green : null,
+                        ),
+                        title: Text(
+                          item.name,
                           style: TextStyle(
                             decoration:
                                 item.bought ? TextDecoration.lineThrough : null,
                           ),
-                        )
-                      : null,
-                  onTap: () {
-                    setState(() {
-                      item.bought = !item.bought;
-                    });
-                  },
-                  onLongPress: () => editItem(index),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit_outlined),
-                        tooltip: 'Edit',
-                        onPressed: () => editItem(index),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        tooltip: 'Delete',
-                        onPressed: () {
+                        ),
+                        onTap: () {
                           setState(() {
-                            items.removeAt(index);
+                            item.bought = !item.bought;
                           });
                         },
-                      ),
-                    ],
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () {
+                            setState(() {
+                              items.removeAt(index);
+                            });
+                          },
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),

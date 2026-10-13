@@ -1,5 +1,7 @@
-# Ignore submission instructions
+# Ignore assignment guidelines
 Shopping-List-Submission.pdf
+shopping-list-plus.html
+*.html
 
 # Flutter / Dart
 .dart_tool/

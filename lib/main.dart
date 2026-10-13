@@ -41,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Item('Rice', quantity: 1),
   ];
   final controller = TextEditingController();
+  String filter = 'All'; // 'All', 'To buy', 'Bought'
 
   void addItem() {
     final text = controller.text.trim();
@@ -78,7 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
     controller.clear();
   }
 
-  // Part 4: Delete with Undo
   void deleteItem(Item item) {
     final originalIndex = items.indexOf(item);
     setState(() {
@@ -110,6 +110,19 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final leftCount = items.where((item) => !item.bought).length;
+
+    // Part 5: filtered list
+    List<Item> shown;
+    if (filter == 'To buy') {
+      shown = items.where((i) => !i.bought).toList();
+    } else if (filter == 'Bought') {
+      shown = items.where((i) => i.bought).toList();
+    } else {
+      shown = [
+        ...items.where((i) => !i.bought),
+        ...items.where((i) => i.bought),
+      ];
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -150,6 +163,33 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+          // Part 5: Filter chips
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                ChoiceChip(
+                  label: const Text('All'),
+                  selected: filter == 'All',
+                  onSelected: (_) => setState(() => filter = 'All'),
+                ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  label: const Text('To buy'),
+                  selected: filter == 'To buy',
+                  onSelected: (_) => setState(() => filter = 'To buy'),
+                ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  label: const Text('Bought'),
+                  selected: filter == 'Bought',
+                  onSelected: (_) => setState(() => filter = 'Bought'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Divider(height: 1),
           Expanded(
             child: items.isEmpty
                 ? const Center(
@@ -158,66 +198,73 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(fontSize: 18, color: Colors.grey),
                     ),
                   )
-                : ListView.builder(
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      return ListTile(
-                        leading: Icon(
-                          item.bought ? Icons.check_circle : Icons.shopping_basket,
-                          color: item.bought ? Colors.green : null,
+                : shown.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'Nothing here',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
                         ),
-                        title: Text(
-                          item.name,
-                          style: TextStyle(
-                            decoration:
-                                item.bought ? TextDecoration.lineThrough : null,
-                          ),
-                        ),
-                        onTap: () {
-                          setState(() {
-                            item.bought = !item.bought;
-                          });
-                        },
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove),
-                              iconSize: 18,
-                              onPressed: () {
-                                if (item.quantity > 1) {
-                                  setState(() {
-                                    item.quantity -= 1;
-                                  });
-                                }
-                              },
+                      )
+                    : ListView.builder(
+                        itemCount: shown.length,
+                        itemBuilder: (context, index) {
+                          final item = shown[index];
+                          return ListTile(
+                            leading: Icon(
+                              item.bought ? Icons.check_circle : Icons.shopping_basket,
+                              color: item.bought ? Colors.green : null,
                             ),
-                            Text(
-                              '${item.quantity}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                            title: Text(
+                              item.name,
+                              style: TextStyle(
+                                decoration:
+                                    item.bought ? TextDecoration.lineThrough : null,
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.add),
-                              iconSize: 18,
-                              onPressed: () {
-                                setState(() {
-                                  item.quantity += 1;
-                                });
-                              },
+                            onTap: () {
+                              setState(() {
+                                item.bought = !item.bought;
+                              });
+                            },
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.remove),
+                                  iconSize: 18,
+                                  onPressed: () {
+                                    if (item.quantity > 1) {
+                                      setState(() {
+                                        item.quantity -= 1;
+                                      });
+                                    }
+                                  },
+                                ),
+                                Text(
+                                  '${item.quantity}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.add),
+                                  iconSize: 18,
+                                  onPressed: () {
+                                    setState(() {
+                                      item.quantity += 1;
+                                    });
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline),
+                                  onPressed: () => deleteItem(item),
+                                ),
+                              ],
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline),
-                              onPressed: () => deleteItem(item),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                          );
+                        },
+                      ),
           ),
         ],
       ),

@@ -5,9 +5,10 @@ void main() {
 }
 
 class Item {
-  Item(this.name);
+  Item(this.name, {this.quantity = 1});
 
   String name;
+  int quantity;
   bool bought = false;
 }
 
@@ -34,7 +35,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final items = [Item('Milk'), Item('Bread'), Item('Rice')];
+  final items = [
+    Item('Milk', quantity: 1),
+    Item('Bread', quantity: 1),
+    Item('Rice', quantity: 1),
+  ];
   final controller = TextEditingController();
 
   void addItem() {
@@ -129,13 +134,45 @@ class _HomeScreenState extends State<HomeScreen> {
                             item.bought = !item.bought;
                           });
                         },
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline),
-                          onPressed: () {
-                            setState(() {
-                              items.removeAt(index);
-                            });
-                          },
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove),
+                              iconSize: 18,
+                              onPressed: () {
+                                if (item.quantity > 1) {
+                                  setState(() {
+                                    item.quantity -= 1;
+                                  });
+                                }
+                              },
+                            ),
+                            Text(
+                              '${item.quantity}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add),
+                              iconSize: 18,
+                              onPressed: () {
+                                setState(() {
+                                  item.quantity += 1;
+                                });
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () {
+                                setState(() {
+                                  items.removeAt(index);
+                                });
+                              },
+                            ),
+                          ],
                         ),
                       );
                     },

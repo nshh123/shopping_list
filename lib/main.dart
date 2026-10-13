@@ -45,13 +45,13 @@ class _HomeScreenState extends State<HomeScreen> {
   void addItem() {
     final text = controller.text.trim();
     if (text.isEmpty) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Type an item first')),
       );
       return;
     }
 
-    // Part 3: Check for duplicates (case-insensitive & trimmed)
     final existingIndex = items.indexWhere(
       (item) => item.name.trim().toLowerCase() == text.toLowerCase(),
     );
@@ -76,6 +76,29 @@ class _HomeScreenState extends State<HomeScreen> {
       items.add(Item(text));
     });
     controller.clear();
+  }
+
+  // Part 4: Delete with Undo
+  void deleteItem(Item item) {
+    final originalIndex = items.indexOf(item);
+    setState(() {
+      items.remove(item);
+    });
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${item.name} removed'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            setState(() {
+              items.insert(originalIndex, item);
+            });
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -188,11 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             IconButton(
                               icon: const Icon(Icons.delete_outline),
-                              onPressed: () {
-                                setState(() {
-                                  items.removeAt(index);
-                                });
-                              },
+                              onPressed: () => deleteItem(item),
                             ),
                           ],
                         ),
